@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The market for loanable funds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#F1F3F6;--ink:#101A24;--muted:#5A6675;--construct:#AEBAC7;
+  --demand:#B4462F;--supply:#0F6E6C;--rule:#D5DCE4;--focus:#0F6E6C;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--paper);color:var(--ink)}
+body{font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.5;padding:16px 18px 14px}
+.fig{max-width:530px;margin:0 auto;width:100%}
+h1{font-family:"Literata",Georgia,serif;font-weight:600;font-size:17px;line-height:1.25;
+  margin:0 0 3px;text-align:center;letter-spacing:-.005em}
+.instruction{font-size:12.5px;color:var(--muted);text-align:center;margin:0 0 6px}
+svg.plot{display:block;width:100%;height:auto;touch-action:none;overflow:visible;
+  -webkit-user-select:none;user-select:none}
+.layer *{pointer-events:none}
+.grips .grip{pointer-events:stroke}
+.grips .gripdot{pointer-events:all}
+.axis{stroke:var(--muted);stroke-width:1.4;fill:none}
+.axlabel{font-size:11.5px;font-weight:600;fill:var(--muted)}
+.construct{fill:none;stroke:var(--construct);stroke-width:1.8;stroke-dasharray:1.5 4.5;stroke-linecap:round}
+.drop{stroke:var(--construct);stroke-width:1.3;stroke-dasharray:4 4}
+.curve{fill:none;stroke-width:2.8;stroke-linecap:round}
+.grip{fill:none;stroke:transparent;stroke-width:22;cursor:ew-resize}
+.gripdot{fill:transparent;stroke:none;cursor:ew-resize}
+.grip:focus{outline:none}
+.focusring{fill:none;stroke:var(--focus);stroke-width:1.6;stroke-dasharray:3 3;opacity:0}
+.curvename{font-family:"Literata",Georgia,serif;font-size:14.5px;font-weight:600}
+.chip{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11.5px;font-weight:500}
+.chipbg{fill:var(--paper)}
+.eqdot{stroke:var(--paper);stroke-width:2.2}
+.eqold{fill:none;stroke:var(--construct);stroke-width:1.8}
+.shiftarrow{stroke-width:1.6;fill:none}
+.caption{border-top:1px solid var(--rule);margin-top:10px;padding-top:9px;text-align:center}
+.readout{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px;color:var(--muted);margin:0}
+.readout b{color:var(--ink);font-weight:500}
+.codebox{margin-top:10px;border:1.5px solid var(--supply);background:#fff;
+  display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 14px}
+.codelabel{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);text-align:left;line-height:1.35;max-width:15ch}
+.shapewrap{display:flex;align-items:center;gap:10px;min-width:0}
+.glyph{font-size:27px;line-height:1;color:var(--supply);transform:translateY(-1px)}
+.shapename{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:16px;font-weight:500;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--supply)}
+.codebox.waiting .glyph,.codebox.waiting .shapename{color:var(--construct);letter-spacing:.06em;
+  text-transform:none;font-size:13px}
+.codebox.waiting{border-color:var(--rule)}
+.footrow{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:9px}
+.slug{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--construct)}
+button.reset{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--muted);background:#fff;border:1.3px solid var(--rule);
+  border-radius:3px;padding:5px 13px;cursor:pointer}
+button.reset:hover{color:var(--ink);border-color:var(--muted)}
+button.reset:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+
+</style>
+</head>
+<body>
+<div class="fig plate">
+  <h1>The market for loanable funds</h1>
+  <p class="instruction">Drag the curve or curves that move. Your result shape appears below the graph.</p>
+  <svg class="plot" viewBox="0 0 470 350" role="img" aria-label="Loanable funds diagram. National saving is a vertical line; investment demand slopes down. Drag either curve left or right to shift it.">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#5A6675"></path>
+      </marker>
+    </defs>
+    <line class="axis" x1="86" y1="298" x2="86" y2="22" marker-end="url(#ah)"></line>
+    <line class="axis" x1="86" y1="298" x2="440" y2="298" marker-end="url(#ah)"></line>
+    <text class="axlabel" x="-160" y="16" transform="rotate(-90)" text-anchor="middle">Real interest rate, r (percent)</text>
+    <text class="axlabel" x="263" y="336" text-anchor="middle">Loanable funds (billions of dollars)</text>
+    <g class="layer"></g>
+    <g class="grips"></g>
+  </svg>
+  <div class="caption">
+    <p class="readout" aria-live="polite"></p>
+  </div>
+  <div class="codebox">
+    <span class="codelabel">Your result</span>
+    <span class="shapewrap" aria-live="polite">
+      <span class="glyph" aria-hidden="true">&mdash;</span>
+      <span class="shapename">Move a curve</span>
+    </span>
+  </div>
+  <div class="footrow">
+    <span class="slug">ECO 3203 &middot; Practice Exam 1</span>
+    <button type="button" class="reset">Reset</button>
+  </div>
+</div>
+<script>
+function mountPlate(root, CFG){
+"use strict";
+var SLOPE=0.8, LIMIT=2.6, MOVED=0.35;
+var X0=86,X1=424,Y0=298,Y1=30,QMAX=10,PMAX=10;
+var BASEQ=5, INTERCEPT=9;
+var st={d:0,s:0};
+var focusOn={d:false,s:false};
+var grips={};
+
+function sx(q){return X0+(q/QMAX)*(X1-X0);}
+function sy(p){return Y0-(p/PMAX)*(Y0-Y1);}
+function dP(q,v){return INTERCEPT-SLOPE*(q-v);}
+function dQ(p,v){return (INTERCEPT-p)/SLOPE+v;}
+function $(sel){return root.querySelector("."+sel);}
+function ns(t){return document.createElementNS("http://www.w3.org/2000/svg",t);}
+
+function dEnds(v){
+  var lo=0.25,hi=QMAX-0.25,a=null,b=null,i,q,p;
+  for(i=0;i<=400;i++){q=lo+(hi-lo)*i/400;p=dP(q,v);
+    if(p>=0.4&&p<=PMAX-0.4){if(a===null)a=q;b=q;}}
+  if(a===null){a=lo;b=hi;}
+  return [a,b];
+}
+function dPath(v){
+  var e=dEnds(v);
+  return "M "+sx(e[0]).toFixed(1)+" "+sy(dP(e[0],v)).toFixed(1)+
+         " L "+sx(e[1]).toFixed(1)+" "+sy(dP(e[1],v)).toFixed(1);
+}
+function sPath(v){
+  var x=sx(BASEQ+v);
+  return "M "+x.toFixed(1)+" "+Y0+" L "+x.toFixed(1)+" "+(Y1+4);
+}
+function add(tag,attrs){
+  var e=ns(tag);
+  for(var k in attrs) e.setAttribute(k,attrs[k]);
+  $("layer").appendChild(e);
+  return e;
+}
+function chip(x,y,txt,anchor,color){
+  var g=ns("g");$("layer").appendChild(g);
+  var t=ns("text");
+  t.setAttribute("class","chip");t.setAttribute("x",x);t.setAttribute("y",y);
+  t.setAttribute("text-anchor",anchor);t.setAttribute("fill",color);t.textContent=txt;
+  var r=ns("rect");r.setAttribute("class","chipbg");
+  g.appendChild(r);g.appendChild(t);
+  var bb=t.getBBox();
+  r.setAttribute("x",bb.x-3);r.setAttribute("y",bb.y-1.5);
+  r.setAttribute("width",bb.width+6);r.setAttribute("height",bb.height+3);
+}
+function arrow(x0,x1,y,color){
+  if(Math.abs(x1-x0)<7) return;
+  var dir=x1>x0?1:-1, tip=x1;
+  add("line",{"class":"shiftarrow",x1:x0,y1:y,x2:tip-dir*5,y2:y,stroke:color});
+  add("path",{d:"M "+tip+" "+y+" L "+(tip-dir*6.5)+" "+(y-3.6)+" L "+(tip-dir*6.5)+" "+(y+3.6)+" Z",
+              fill:color,stroke:"none"});
+}
+function nameTag(x,y,txt,color,anchor){
+  var t=ns("text");
+  t.setAttribute("class","curvename");
+  t.setAttribute("x",x);t.setAttribute("y",y);
+  t.setAttribute("text-anchor",anchor||"start");
+  t.setAttribute("fill",color);
+  t.textContent=txt;
+  $("layer").appendChild(t);
+}
+function paintHandle(h){
+  if(!h) return;
+  var g=ns("g");
+  var r=ns("circle");
+  r.setAttribute("cx",h.x);r.setAttribute("cy",h.y);r.setAttribute("r",8);
+  r.setAttribute("fill","var(--paper)");r.setAttribute("stroke",h.c);
+  r.setAttribute("stroke-width","1.6");g.appendChild(r);
+  var p=ns("path");
+  p.setAttribute("d","M "+(h.x-3.8)+" "+(h.y-3.2)+" L "+(h.x-.8)+" "+h.y+" L "+(h.x-3.8)+" "+(h.y+3.2)+
+                 " M "+(h.x+3.8)+" "+(h.y-3.2)+" L "+(h.x+.8)+" "+h.y+" L "+(h.x+3.8)+" "+(h.y+3.2));
+  p.setAttribute("fill","none");p.setAttribute("stroke",h.c);
+  p.setAttribute("stroke-width","1.6");p.setAttribute("stroke-linecap","round");
+  p.setAttribute("stroke-linejoin","round");
+  g.appendChild(p);
+  $("layer").appendChild(g);
+}
+
+function draw(){
+  var layer=$("layer");
+  while(layer.firstChild) layer.removeChild(layer.firstChild);
+
+  var dv=st.d, sv=st.s;
+  var dMoved=Math.abs(dv)>=MOVED, sMoved=Math.abs(sv)>=MOVED;
+  var qs=BASEQ+sv, ps=dP(qs,dv);
+
+  if(dMoved) add("path",{"class":"construct",d:dPath(0)});
+  if(sMoved) add("path",{"class":"construct",d:sPath(0)});
+
+  add("line",{"class":"drop",x1:X0,y1:sy(ps),x2:sx(qs),y2:sy(ps)});
+  add("line",{"class":"drop",x1:sx(qs),y1:sy(ps),x2:sx(qs),y2:Y0});
+
+  if(dMoved) arrow(sx(dQ(7.6,0)),sx(dQ(7.6,dv)),sy(7.6),"var(--demand)");
+  if(sMoved) arrow(sx(BASEQ),sx(BASEQ+sv),sy(0.7),"var(--supply)");
+
+  if(focusOn.d) add("path",{"class":"focusring",d:dPath(dv),style:"opacity:1"});
+  if(focusOn.s) add("path",{"class":"focusring",d:sPath(sv),style:"opacity:1"});
+
+  add("path",{"class":"curve",d:dPath(dv),stroke:"var(--demand)"});
+  add("path",{"class":"curve",d:sPath(sv),stroke:"var(--supply)"});
+
+  var de=dEnds(dv);
+  nameTag(Math.min(sx(de[1])+9,X1+30), sy(dP(de[1],dv))+11, CFG.dName+(dMoved?"′":""), "var(--demand)");
+  nameTag(sx(BASEQ+sv), Y1+(-6), CFG.sName+(sMoved?"′":""), "var(--supply)", "middle");
+
+  if(dMoved||sMoved){
+    add("circle",{cx:sx(BASEQ),cy:sy(dP(BASEQ,0)),r:6,fill:"var(--paper)",stroke:"none"});
+    add("circle",{"class":"eqold",cx:sx(BASEQ),cy:sy(dP(BASEQ,0)),r:4.5});
+  }
+  add("circle",{"class":"eqdot",cx:sx(qs),cy:sy(ps),r:5.5,fill:"var(--ink)"});
+
+  chip(X0-9,sy(ps)+4,CFG.fmtY(ps),"end","var(--ink)");
+  chip(sx(qs),Y0+17,CFG.fmtX(qs),"middle","var(--ink)");
+
+  var dh=de[0]+(de[1]-de[0])*0.85;
+  paintHandle({x:sx(dh),y:sy(dP(dh,dv)),c:"var(--demand)"});
+  paintHandle({x:sx(BASEQ+sv),y:sy(8.3),c:"var(--supply)"});
+
+  if(grips.d){grips.d.setAttribute("d",dPath(dv));
+    grips.d.setAttribute("aria-valuenow",dv.toFixed(1));
+    grips.d.setAttribute("aria-valuetext",valueText("d"));}
+  if(grips.s){grips.s.setAttribute("d",sPath(sv));
+    grips.s.setAttribute("aria-valuenow",sv.toFixed(1));
+    grips.s.setAttribute("aria-valuetext",valueText("s"));}
+  if(grips.ddot){grips.ddot.setAttribute("cx",sx(dh));grips.ddot.setAttribute("cy",sy(dP(dh,dv)));}
+  if(grips.sdot){grips.sdot.setAttribute("cx",sx(BASEQ+sv));grips.sdot.setAttribute("cy",sy(8.3));}
+
+  captions(dv,sv,ps,qs,dMoved,sMoved);
+}
+function valueText(kind){
+  var v=st[kind],name=(kind==="d"?CFG.dFull:CFG.sFull);
+  if(Math.abs(v)<MOVED) return name+" unchanged";
+  return name+" shifted "+(v>0?"right":"left")+" by "+Math.abs(v).toFixed(1)+" units";
+}
+function mkGrip(kind,label){
+  var g=ns("path");
+  g.setAttribute("class","grip");
+  g.setAttribute("tabindex","0");
+  g.setAttribute("role","slider");
+  g.setAttribute("aria-label",label);
+  g.setAttribute("aria-valuemin","-2.6");
+  g.setAttribute("aria-valuemax","2.6");
+  $("grips").appendChild(g);
+  g.addEventListener("focus",function(){focusOn[kind]=true;draw();});
+  g.addEventListener("blur",function(){focusOn[kind]=false;draw();});
+  return g;
+}
+function mkDot(){
+  var c=ns("circle");
+  c.setAttribute("class","gripdot");
+  c.setAttribute("r","15");
+  c.setAttribute("aria-hidden","true");
+  $("grips").appendChild(c);
+  return c;
+}
+function perPxX(el){
+  var b=el.ownerSVGElement.getBoundingClientRect();
+  return (470/b.width)*QMAX/(X1-X0);
+}
+function bindShift(el,kind){
+  var on=false,x0=0,v0=0;
+  el.addEventListener("pointerdown",function(ev){
+    on=true;x0=ev.clientX;v0=st[kind];
+    el.setPointerCapture(ev.pointerId);el.style.cursor="grabbing";ev.preventDefault();
+  });
+  el.addEventListener("pointermove",function(ev){
+    if(!on)return;
+    st[kind]=Math.max(-LIMIT,Math.min(LIMIT,v0+(ev.clientX-x0)*perPxX(el)));
+    draw();
+  });
+  function end(ev){if(!on)return;on=false;el.style.cursor="";
+    try{el.releasePointerCapture(ev.pointerId);}catch(e){}}
+  el.addEventListener("pointerup",end);
+  el.addEventListener("pointercancel",end);
+  el.addEventListener("keydown",function(ev){
+    var step=ev.shiftKey?0.1:0.4;
+    if(ev.key==="ArrowRight")st[kind]=Math.min(LIMIT,st[kind]+step);
+    else if(ev.key==="ArrowLeft")st[kind]=Math.max(-LIMIT,st[kind]-step);
+    else if(ev.key==="Home")st[kind]=0;
+    else return;
+    ev.preventDefault();draw();
+  });
+}
+function captions(dv,sv,ps,qs,dm,sm){
+  var C=CFG.caption(dv,sv,ps,qs,dm,sm);
+  var ro=$("readout"); if(ro) ro.innerHTML=C.readout;
+  var box=$("codebox");
+  if(box&&C.shape){
+    box.querySelector(".glyph").textContent=C.shape.glyph;
+    box.querySelector(".shapename").textContent=C.shape.name;
+    box.className="codebox"+(C.shape.waiting?" waiting":"");
+  }
+}
+grips.d=mkGrip("d",CFG.gripLabelD);bindShift(grips.d,"d");
+grips.ddot=mkDot();bindShift(grips.ddot,"d");
+grips.s=mkGrip("s",CFG.gripLabelS);bindShift(grips.s,"s");
+grips.sdot=mkDot();bindShift(grips.sdot,"s");
+$("reset").addEventListener("click",function(){st.d=0;st.s=0;draw();});
+window.addEventListener("resize",draw);
+draw();
+}
+
+var SHAPES={
+  dLeft :{glyph:"◆",name:"Diamond"},
+  dRight:{glyph:"★",name:"Star"},
+  sLeft :{glyph:"●",name:"Circle"},
+  sRight:{glyph:"▲",name:"Triangle"},
+  both  :{glyph:"■",name:"Square"},
+  none  :{glyph:"—",name:"Move a curve",waiting:true}
+};
+function resultShape(ds,ss){
+  if(ds!==0&&ss!==0) return SHAPES.both;
+  if(ds<0) return SHAPES.dLeft;
+  if(ds>0) return SHAPES.dRight;
+  if(ss<0) return SHAPES.sLeft;
+  if(ss>0) return SHAPES.sRight;
+  return SHAPES.none;
+}
+function sgn(v){return Math.abs(v)<0.35?0:(v>0?1:-1);}
+function word(v,name){
+  if(Math.abs(v)<0.35) return name+" unchanged";
+  return name+" shifted "+(v>0?"right":"left");
+}
+
+mountPlate(document.querySelector('.plate'), {
+    dName:"I(r)", sName:"S", dFull:"Investment demand", sFull:"National saving",
+    gripLabelD:"Investment demand curve. Drag left or right, or use the left and right arrow keys, to shift investment demand.",
+    gripLabelS:"National saving line. Drag left or right, or use the left and right arrow keys, to shift national saving.",
+    fmtY:function(p){return p.toFixed(1)+"%";},
+    fmtX:function(q){return "$"+(Math.round(q*10)*10).toFixed(0)+"B";},
+    caption:function(dv,sv,ps,qs,dm,sm){
+      return {
+        readout: word(sv,"National saving")+" &middot; "+word(dv,"Investment demand")+
+                 "<br>r = <b>"+ps.toFixed(1)+"%</b> &middot; investment = <b>$"+(Math.round(qs*10)*10).toFixed(0)+"B</b>",
+        shape: resultShape(sgn(dv),sgn(sv))
+      };
+    }
+  });
+</script>
+</body>
+</html>
