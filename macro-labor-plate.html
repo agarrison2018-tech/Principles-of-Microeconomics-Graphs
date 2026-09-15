@@ -43,17 +43,16 @@ svg.plot{display:block;width:100%;height:auto;touch-action:none;overflow:visible
 .caption{border-top:1px solid var(--rule);margin-top:10px;padding-top:9px;text-align:center}
 .readout{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px;color:var(--muted);margin:0}
 .readout b{color:var(--ink);font-weight:500}
-.codebox{margin-top:10px;border:1.5px solid var(--supply);background:#fff;
-  display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 14px}
+.codebox{margin-top:10px;border:1.5px solid var(--supply);background:#fff;border-radius:4px;
+  display:flex;align-items:flex-start;gap:13px;padding:11px 14px}
 .codelabel{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10px;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--muted);text-align:left;line-height:1.35;max-width:15ch}
-.shapewrap{display:flex;align-items:center;gap:10px;min-width:0}
-.glyph{font-size:27px;line-height:1;color:var(--supply);transform:translateY(-1px)}
-.shapename{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:16px;font-weight:500;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--supply)}
-.codebox.waiting .glyph,.codebox.waiting .shapename{color:var(--construct);letter-spacing:.06em;
-  text-transform:none;font-size:13px}
-.codebox.waiting{border-color:var(--rule)}
+  text-transform:uppercase;color:var(--muted);text-align:left;line-height:1.35;
+  flex:0 0 8.5ch;padding-top:3px}
+.statement{font-family:"Literata",Georgia,serif;font-size:14px;font-weight:600;line-height:1.4;
+  color:var(--supply);min-width:0;text-align:left}
+.codebox.waiting{border-color:var(--rule);border-style:dashed}
+.codebox.waiting .statement{font-family:"IBM Plex Sans",system-ui,sans-serif;font-weight:400;
+  font-size:12.5px;color:var(--muted)}
 .footrow{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:9px}
 .slug{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10px;letter-spacing:.09em;
   text-transform:uppercase;color:var(--construct)}
@@ -68,7 +67,7 @@ button.reset:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
 <body>
 <div class="fig plate">
   <h1>The market for labor</h1>
-  <p class="instruction">Drag the curve or curves that move. Your result shape appears below the graph.</p>
+  <p class="instruction">Drag a curve with your mouse, or click it and use the &#8592; and &#8594; arrow keys. The box under the graph names the answer to select.</p>
   <svg class="plot" viewBox="0 0 470 350" role="img" aria-label="Labor market diagram. Labor supply is a vertical line; labor demand, the marginal product of labor, slopes down. Drag either curve left or right to shift it.">
     <defs>
       <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -85,12 +84,9 @@ button.reset:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
   <div class="caption">
     <p class="readout" aria-live="polite"></p>
   </div>
-  <div class="codebox">
-    <span class="codelabel">Your result</span>
-    <span class="shapewrap" aria-live="polite">
-      <span class="glyph" aria-hidden="true">&mdash;</span>
-      <span class="shapename">Move a curve</span>
-    </span>
+  <div class="codebox waiting">
+    <span class="codelabel">The graph shows</span>
+    <span class="statement" aria-live="polite">Move a curve. This box will name the answer to select.</span>
   </div>
   <div class="footrow">
     <span class="slug">ECO 3203 &middot; Practice Exam 1</span>
@@ -289,10 +285,9 @@ function captions(dv,sv,ps,qs,dm,sm){
   var C=CFG.caption(dv,sv,ps,qs,dm,sm);
   var ro=$("readout"); if(ro) ro.innerHTML=C.readout;
   var box=$("codebox");
-  if(box&&C.shape){
-    box.querySelector(".glyph").textContent=C.shape.glyph;
-    box.querySelector(".shapename").textContent=C.shape.name;
-    box.className="codebox"+(C.shape.waiting?" waiting":"");
+  if(box&&C.statement){
+    box.querySelector(".statement").textContent=C.statement.text;
+    box.className="codebox"+(C.statement.waiting?" waiting":"");
   }
 }
 grips.d=mkGrip("d",CFG.gripLabelD);bindShift(grips.d,"d");
@@ -304,21 +299,21 @@ window.addEventListener("resize",draw);
 draw();
 }
 
-var SHAPES={
-  dLeft :{glyph:"◆",name:"Diamond"},
-  dRight:{glyph:"★",name:"Star"},
-  sLeft :{glyph:"●",name:"Circle"},
-  sRight:{glyph:"▲",name:"Triangle"},
-  both  :{glyph:"■",name:"Square"},
-  none  :{glyph:"—",name:"Move a curve",waiting:true}
+var STMT_LABOR={
+  dLeft :{text:"Labor demand shifts left — the real wage falls and employment is unchanged."},
+  dRight:{text:"Labor demand shifts right — the real wage rises and employment is unchanged."},
+  sLeft :{text:"Labor supply shifts left — the real wage rises and employment falls."},
+  sRight:{text:"Labor supply shifts right — the real wage falls and employment rises."},
+  both  :{text:"You moved both curves. Only one curve shifts in this story — reset and try again.",waiting:true},
+  none  :{text:"Move a curve. This box will name the answer to select.",waiting:true}
 };
-function resultShape(ds,ss){
-  if(ds!==0&&ss!==0) return SHAPES.both;
-  if(ds<0) return SHAPES.dLeft;
-  if(ds>0) return SHAPES.dRight;
-  if(ss<0) return SHAPES.sLeft;
-  if(ss>0) return SHAPES.sRight;
-  return SHAPES.none;
+function resultStatement(ds,ss,S){
+  if(ds!==0&&ss!==0) return S.both;
+  if(ds<0) return S.dLeft;
+  if(ds>0) return S.dRight;
+  if(ss<0) return S.sLeft;
+  if(ss>0) return S.sRight;
+  return S.none;
 }
 function sgn(v){return Math.abs(v)<0.35?0:(v>0?1:-1);}
 function word(v,name){
@@ -336,7 +331,7 @@ mountPlate(document.querySelector('.plate'), {
       return {
         readout: word(dv,"Labor demand (MPL)")+" &middot; "+word(sv,"Labor supply")+
                  "<br>real wage = <b>"+ps.toFixed(1)+"</b> &middot; employment = <b>"+(qs*20).toFixed(0)+"M</b>",
-        shape: resultShape(sgn(dv),sgn(sv))
+        statement: resultStatement(sgn(dv),sgn(sv),STMT_LABOR)
       };
     }
   });
