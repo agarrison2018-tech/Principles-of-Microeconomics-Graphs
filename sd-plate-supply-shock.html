@@ -18,7 +18,8 @@
   .how{font-size:13px;line-height:1.45;color:#3A4754;margin:0 0 12px;}
   .how b{color:var(--ink)}
   figure{margin:0}
-  svg{display:block;width:100%;height:auto;touch-action:none}
+  svg{display:block;width:100%;height:auto;touch-action:none;
+    user-select:none;-webkit-user-select:none;-moz-user-select:none;}
   .curve{stroke-width:3.5;fill:none;stroke-linecap:round;cursor:grab}
   .curve:focus{outline:none}
   .curve.grabbing{cursor:grabbing}
@@ -183,7 +184,7 @@
       active=true; id=ev.pointerId; startX=ev.clientX;
       startShift = which==='d' ? dShift : sShift;
       curve.classList.add('grabbing');
-      hit.setPointerCapture && hit.setPointerCapture(id);
+      if(hit.setPointerCapture && ev.pointerId!==undefined){ try{ hit.setPointerCapture(id); }catch(e){} }
       curve.focus({preventScroll:true});
       ev.preventDefault();
     }
@@ -201,6 +202,18 @@
     window.addEventListener('pointermove',move);
     window.addEventListener('pointerup',up);
     window.addEventListener('pointercancel',up);
+    // mouse fallback for browsers or tools that do not emit pointer events
+    hit.addEventListener('mousedown',down);
+    curve.addEventListener('mousedown',down);
+    window.addEventListener('mousemove',move);
+    window.addEventListener('mouseup',up);
+    // touch fallback
+    function touchDown(ev){ var t=ev.touches[0]; if(t) down({clientX:t.clientX,pointerId:1,preventDefault:function(){ev.preventDefault();}}); }
+    function touchMove(ev){ var t=ev.touches[0]; if(t && active){ move({clientX:t.clientX}); ev.preventDefault(); } }
+    hit.addEventListener('touchstart',touchDown,{passive:false});
+    curve.addEventListener('touchstart',touchDown,{passive:false});
+    window.addEventListener('touchmove',touchMove,{passive:false});
+    window.addEventListener('touchend',up);
   }
   attachDrag(dHit,dCurve,'d');
   attachDrag(sHit,sCurve,'s');
