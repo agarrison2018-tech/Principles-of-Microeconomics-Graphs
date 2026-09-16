@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Supply and Demand — Shift the Curve</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;600&family=Literata:opsz,wght@7..72,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F3F6; --ink:#101A24; --construction:#AEBAC7;
+    --demand:#B4462F; --supply:#0F6E6C; --rule:#D5DCE4;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,sans-serif;}
+  .wrap{max-width:560px;margin:0 auto;padding:14px 16px 18px;}
+  h1{font-family:Literata,Georgia,serif;font-size:19px;line-height:1.25;margin:0 0 6px;font-weight:600;}
+  .how{font-size:13px;line-height:1.45;color:#3A4754;margin:0 0 12px;}
+  .how b{color:var(--ink)}
+  figure{margin:0}
+  svg{display:block;width:100%;height:auto;touch-action:none}
+  .curve{stroke-width:3.5;fill:none;stroke-linecap:round;cursor:grab}
+  .curve:focus{outline:none}
+  .curve.grabbing{cursor:grabbing}
+  .ghost{stroke-width:2.5;fill:none;stroke-dasharray:7 6;stroke:var(--construction)}
+  .hit{stroke-width:26;stroke:transparent;fill:none;cursor:grab}
+  .axis{stroke:var(--ink);stroke-width:2.5}
+  .guide{stroke:var(--construction);stroke-width:1.75;stroke-dasharray:5 5}
+  .lbl{font-family:"IBM Plex Sans";font-size:15px;font-weight:600}
+  .axlbl{font-family:"IBM Plex Sans";font-size:14px;fill:#3A4754}
+  .eq{fill:var(--ink)}
+  .ring{fill:none;stroke:var(--ink);stroke-width:2}
+  .box{margin-top:12px;border:1px solid var(--rule);border-left:5px solid var(--ink);
+    background:#fff;border-radius:6px;padding:11px 14px;}
+  .box .cap{font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:#5B6B7B;margin:0 0 5px;}
+  .box .stmt{font-family:Literata,Georgia,serif;font-size:16px;line-height:1.4;margin:0;font-weight:600;}
+  .box.idle{border-left-color:var(--construction)}
+  .box.idle .stmt{font-family:"IBM Plex Sans";font-weight:400;color:#5B6B7B;font-size:14px}
+  .box.warn{border-left-color:#B4462F}
+  .box.warn .stmt{font-family:"IBM Plex Sans";font-weight:400;color:#B4462F;font-size:14px}
+  .bar{display:flex;align-items:center;gap:10px;margin-top:10px}
+  button{font-family:"IBM Plex Sans";font-size:13px;font-weight:600;color:var(--ink);
+    background:#fff;border:1px solid var(--rule);border-radius:5px;padding:6px 12px;cursor:pointer}
+  button:hover{border-color:var(--construction)}
+  .readout{font-family:"IBM Plex Mono";font-size:12px;color:#5B6B7B}
+  @media (max-width:420px){ .wrap{padding:10px 12px} h1{font-size:17px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="title">The market for gasoline</h1>
+  <p class="how">Drag the <b>one curve</b> this story moves — with your mouse, or by clicking a curve and pressing the <b>&larr;</b> and <b>&rarr;</b> arrow keys. The box below will state what happens in this market. Choose that same statement in the question.</p>
+
+  <figure>
+  <svg id="plate" viewBox="0 0 560 420" role="img" aria-labelledby="title">
+    <!-- axes -->
+    <line class="axis" x1="70" y1="20"  x2="70"  y2="360"/>
+    <line class="axis" x1="70" y1="360" x2="520" y2="360"/>
+    <text class="axlbl" x="70" y="392" text-anchor="start">Quantity</text>
+    <text class="axlbl" x="20" y="24" transform="rotate(-90 20 24)" text-anchor="end">Price</text>
+
+    <!-- guides + equilibrium -->
+    <line id="gv" class="guide" x1="0" y1="0" x2="0" y2="0"/>
+    <line id="gh" class="guide" x1="0" y1="0" x2="0" y2="0"/>
+
+    <!-- ghosts (original positions) -->
+    <line id="dGhost" class="ghost" style="display:none"/>
+    <line id="sGhost" class="ghost" style="display:none"/>
+
+    <!-- curves -->
+    <line id="dHit" class="hit"/>
+    <line id="sHit" class="hit"/>
+    <line id="dCurve" class="curve" stroke="var(--demand)" tabindex="0" role="slider"
+          aria-label="Demand curve. Press left or right arrow to shift it."/>
+    <line id="sCurve" class="curve" stroke="var(--supply)" tabindex="0" role="slider"
+          aria-label="Supply curve. Press left or right arrow to shift it."/>
+
+    <text id="dLab" class="lbl" fill="var(--demand)">D</text>
+    <text id="sLab" class="lbl" fill="var(--supply)">S</text>
+
+    <circle id="eqRing" class="ring" r="7"/>
+    <circle id="eqDot"  class="eq"   r="3.5"/>
+  </svg>
+  </figure>
+
+  <div class="box idle" id="box">
+    <p class="cap">The graph shows</p>
+    <p class="stmt" id="stmt">Move a curve to see the result.</p>
+  </div>
+
+  <div class="bar">
+    <button id="reset" type="button">Reset</button>
+    <span class="readout" id="readout"></span>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var X0=70, X1=520, Y0=20, Y1=360;         // plot box
+  var STEP=14, MAXSHIFT=112;                 // px per arrow press, max drag
+  var dShift=0, sShift=0;                    // current horizontal offsets
+
+  // base curve endpoints (before any shift)
+  var D={x1:110,y1:60, x2:470,y2:330};       // demand: down-sloping
+  var S={x1:110,y1:330,x2:470,y2:60};        // supply: up-sloping
+
+  var el=function(id){return document.getElementById(id);};
+  var dCurve=el('dCurve'), sCurve=el('sCurve'), dHit=el('dHit'), sHit=el('sHit');
+  var dGhost=el('dGhost'), sGhost=el('sGhost'), dLab=el('dLab'), sLab=el('sLab');
+  var gv=el('gv'), gh=el('gh'), eqDot=el('eqDot'), eqRing=el('eqRing');
+  var box=el('box'), stmt=el('stmt'), readout=el('readout');
+
+  function setLine(node,a){ node.setAttribute('x1',a.x1); node.setAttribute('y1',a.y1);
+                            node.setAttribute('x2',a.x2); node.setAttribute('y2',a.y2); }
+  function shifted(base,dx){ return {x1:base.x1+dx, y1:base.y1, x2:base.x2+dx, y2:base.y2}; }
+
+  // intersection of the two (infinite) lines
+  function equilibrium(a,b){
+    var a1=a.y2-a.y1, b1=a.x1-a.x2, c1=a1*a.x1+b1*a.y1;
+    var a2=b.y2-b.y1, b2=b.x1-b.x2, c2=a2*b.x1+b2*b.y1;
+    var det=a1*b2-a2*b1;
+    if(Math.abs(det)<1e-9) return null;
+    return { x:(b2*c1-b1*c2)/det, y:(a1*c2-a2*c1)/det };
+  }
+
+  var BASE=equilibrium(D,S);
+
+  function statementFor(){
+    var movedD=Math.abs(dShift)>2, movedS=Math.abs(sShift)>2;
+    if(movedD&&movedS) return {kind:'warn', text:'You have moved both curves. Press Reset and move only the one the story changes.'};
+    if(!movedD&&!movedS) return {kind:'idle', text:'Move a curve to see the result.'};
+    if(movedS){
+      return sShift<0
+        ? {kind:'ok', text:'Supply shifts left — the price rises and the quantity falls.'}
+        : {kind:'ok', text:'Supply shifts right — the price falls and the quantity rises.'};
+    }
+    return dShift<0
+      ? {kind:'ok', text:'Demand shifts left — the price falls and the quantity falls.'}
+      : {kind:'ok', text:'Demand shifts right — the price rises and the quantity rises.'};
+  }
+
+  function draw(){
+    var d=shifted(D,dShift), s=shifted(S,sShift);
+    setLine(dCurve,d); setLine(sCurve,s); setLine(dHit,d); setLine(sHit,s);
+
+    if(Math.abs(dShift)>2){ dGhost.style.display=''; setLine(dGhost,D); } else { dGhost.style.display='none'; }
+    if(Math.abs(sShift)>2){ sGhost.style.display=''; setLine(sGhost,S); } else { sGhost.style.display='none'; }
+
+    dLab.setAttribute('x', d.x2+8);  dLab.setAttribute('y', d.y2+5);
+    sLab.setAttribute('x', s.x2+8);  sLab.setAttribute('y', s.y2+5);
+
+    var e=equilibrium(d,s);
+    if(e && e.x>X0 && e.x<X1 && e.y>Y0 && e.y<Y1){
+      eqDot.style.display=''; eqRing.style.display=''; gv.style.display=''; gh.style.display='';
+      eqDot.setAttribute('cx',e.x); eqDot.setAttribute('cy',e.y);
+      eqRing.setAttribute('cx',e.x); eqRing.setAttribute('cy',e.y);
+      gv.setAttribute('x1',e.x); gv.setAttribute('y1',e.y); gv.setAttribute('x2',e.x); gv.setAttribute('y2',Y1);
+      gh.setAttribute('x1',X0);  gh.setAttribute('y1',e.y); gh.setAttribute('x2',e.x); gh.setAttribute('y2',e.y);
+      if(BASE){
+        var dp = (BASE.y-e.y), dq=(e.x-BASE.x);
+        var pw = Math.abs(dp)<3 ? 'unchanged' : (dp>0 ? 'higher' : 'lower');
+        var qw = Math.abs(dq)<3 ? 'unchanged' : (dq>0 ? 'higher' : 'lower');
+        readout.textContent = 'price ' + pw + '  ·  quantity ' + qw;
+      }
+    } else {
+      eqDot.style.display='none'; eqRing.style.display='none';
+      gv.style.display='none'; gh.style.display='none'; readout.textContent='';
+    }
+
+    var st=statementFor();
+    stmt.textContent=st.text;
+    box.className='box' + (st.kind==='ok' ? '' : (' '+st.kind));
+    if(st.kind!=='ok') readout.textContent='';
+  }
+
+  function clamp(v){ return Math.max(-MAXSHIFT, Math.min(MAXSHIFT, v)); }
+
+  // ---- pointer dragging -------------------------------------------------
+  function attachDrag(hit, curve, which){
+    var startX=0, startShift=0, active=false, id=null;
+    function down(ev){
+      active=true; id=ev.pointerId; startX=ev.clientX;
+      startShift = which==='d' ? dShift : sShift;
+      curve.classList.add('grabbing');
+      hit.setPointerCapture && hit.setPointerCapture(id);
+      curve.focus({preventScroll:true});
+      ev.preventDefault();
+    }
+    function move(ev){
+      if(!active) return;
+      var svg=document.getElementById('plate');
+      var scale = 560 / svg.getBoundingClientRect().width;
+      var dx=(ev.clientX-startX)*scale;
+      if(which==='d') dShift=clamp(startShift+dx); else sShift=clamp(startShift+dx);
+      draw();
+    }
+    function up(){ active=false; curve.classList.remove('grabbing'); }
+    hit.addEventListener('pointerdown',down);
+    curve.addEventListener('pointerdown',down);
+    window.addEventListener('pointermove',move);
+    window.addEventListener('pointerup',up);
+    window.addEventListener('pointercancel',up);
+  }
+  attachDrag(dHit,dCurve,'d');
+  attachDrag(sHit,sCurve,'s');
+
+  // ---- keyboard ---------------------------------------------------------
+  function keys(curve,which){
+    curve.addEventListener('keydown',function(ev){
+      var k=ev.key;
+      if(k!=='ArrowLeft'&&k!=='ArrowRight') return;
+      var delta = (k==='ArrowRight') ? STEP : -STEP;
+      if(which==='d') dShift=clamp(dShift+delta); else sShift=clamp(sShift+delta);
+      draw(); ev.preventDefault();
+    });
+  }
+  keys(dCurve,'d'); keys(sCurve,'s');
+
+  el('reset').addEventListener('click',function(){ dShift=0; sShift=0; draw(); });
+
+  draw();
+})();
+</script>
+</body>
+</html>
